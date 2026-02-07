@@ -9,10 +9,13 @@ import {
   Settings,
   Plus,
   ArrowLeft,
+  Users,
+  LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
+import { signOut } from 'next-auth/react';
 import Layout from './Layout';
 import {
   Description,
@@ -26,8 +29,8 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return <div className="flex flex-col items-center w-full">{children}</div>;
 };
 
-const Sidebar = ({ children }: { children: React.ReactNode }) => {
-  const segments = useSelectedLayoutSegments();
+const Sidebar = ({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) => {
+  const segments = useSelectedLayoutSegments() ?? [];
   const [isOpen, setIsOpen] = useState<boolean>(true);
 
   const navLinks = [
@@ -101,7 +104,30 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             ))}
           </VerticalIconContainer>
 
-          <SettingsButton />
+          <div className="flex flex-col items-center gap-2">
+            {isAdmin && (
+              <Link
+                href="/admin/users"
+                className={cn(
+                  'p-2.5 rounded-full hover:opacity-70 hover:scale-105 transition duration-200',
+                  segments.includes('admin')
+                    ? 'bg-light-200 text-black/70 dark:bg-dark-200 dark:text-white/70'
+                    : 'text-black/50 dark:text-white/50 hover:bg-light-200 hover:dark:bg-dark-200',
+                )}
+                title="Manage Users"
+              >
+                <Users size={19} />
+              </Link>
+            )}
+            {isAdmin && <SettingsButton />}
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="p-2.5 rounded-full text-black/50 dark:text-white/50 hover:bg-light-200 hover:dark:bg-dark-200 hover:opacity-70 hover:scale-105 transition duration-200"
+              title="Logout"
+            >
+              <LogOut size={19} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -124,6 +150,13 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             <p className="text-xs">{link.label}</p>
           </Link>
         ))}
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="relative flex flex-col items-center space-y-1 text-center w-full text-black dark:text-white/70"
+        >
+          <LogOut />
+          <p className="text-xs">Logout</p>
+        </button>
       </div>
 
       <Layout>{children}</Layout>
