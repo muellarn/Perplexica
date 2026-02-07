@@ -2,6 +2,7 @@ import configManager from '@/lib/config';
 import ModelRegistry from '@/lib/models/registry';
 import { NextRequest, NextResponse } from 'next/server';
 import { ConfigModelProvider } from '@/lib/config/types';
+import { requireAdmin } from '@/lib/auth';
 
 type SaveConfigBody = {
   key: string;
@@ -9,6 +10,11 @@ type SaveConfigBody = {
 };
 
 export const GET = async (req: NextRequest) => {
+  const session = await requireAdmin();
+  if (!session) {
+    return Response.json({ message: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const values = configManager.getCurrentConfig();
     const fields = configManager.getUIConfigSections();
@@ -43,6 +49,11 @@ export const GET = async (req: NextRequest) => {
 };
 
 export const POST = async (req: NextRequest) => {
+  const session = await requireAdmin();
+  if (!session) {
+    return Response.json({ message: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const body: SaveConfigBody = await req.json();
 

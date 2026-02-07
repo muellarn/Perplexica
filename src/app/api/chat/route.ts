@@ -9,6 +9,7 @@ import db from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { chats } from '@/lib/db/schema';
 import UploadManager from '@/lib/uploads/manager';
+import { getAuthSession } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -73,6 +74,7 @@ const ensureChatExists = async (input: {
   sources: SearchSources[];
   query: string;
   fileIds: string[];
+  userId: string;
 }) => {
   try {
     const exists = await db.query.chats
@@ -93,6 +95,7 @@ const ensureChatExists = async (input: {
             name: UploadManager.getFile(id)?.name || 'Uploaded File',
           };
         }),
+        userId: input.userId,
       });
     }
   } catch (err) {
@@ -101,6 +104,11 @@ const ensureChatExists = async (input: {
 };
 
 export const POST = async (req: Request) => {
+  const authSession = await getAuthSession();
+  if (!authSession?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const reqBody = (await req.json()) as Body;
 
@@ -230,6 +238,7 @@ export const POST = async (req: Request) => {
       sources: body.sources as SearchSources[],
       fileIds: body.files,
       query: body.message.content,
+      userId: (authSession.user as any).id,
     });
 
     req.signal.addEventListener('abort', () => {

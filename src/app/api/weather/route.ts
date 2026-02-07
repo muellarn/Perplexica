@@ -1,4 +1,11 @@
+import { getAuthSession } from '@/lib/auth';
+
 export const POST = async (req: Request) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body: {
       lat: number;

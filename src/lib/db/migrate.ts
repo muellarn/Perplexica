@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import bcryptjs from 'bcryptjs';
 
 const DATA_DIR = process.env.DATA_DIR || process.cwd();
 const dbPath = path.join(DATA_DIR, './data/db.sqlite');
@@ -268,8 +269,47 @@ fs.readdirSync(migrationsFolder)
 
         db.exec('DROP TABLE messages;');
         db.exec('ALTER TABLE messages_new RENAME TO messages;');
+      } else if (migrationName === '0003') {
+        statements.forEach((stmt) => {
+          if (stmt.trim()) {
+            db.exec(stmt);
+          }
+        });
+
+        const adminUsername = process.env.ADMIN_USERNAME;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (adminUsername && adminPassword) {
+          const existingAdmin = db
+            .prepare('SELECT 1 FROM users WHERE role = ?')
+            .get('admin');
+
+          if (!existingAdmin) {
+            const adminId = crypto.randomUUID();
+            const passwordHash = bcryptjs.hashSync(adminPassword, 12);
+
+            db.prepare(
+              'INSERT INTO users (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, ?, ?)',
+            ).run(
+              adminId,
+              adminUsername,
+              passwordHash,
+              'admin',
+              new Date().toISOString(),
+            );
+
+            db.exec(`UPDATE chats SET userId = '${adminId}' WHERE userId = ''`);
+
+            console.log(
+              `Created admin user '${adminUsername}' and assigned existing chats`,
+            );
+          }
+        } else {
+          console.log(
+            'No ADMIN_USERNAME/ADMIN_PASSWORD set, skipping admin bootstrap',
+          );
+        }
       } else {
-        // Execute each statement separately
         statements.forEach((stmt) => {
           if (stmt.trim()) {
             db.exec(stmt);

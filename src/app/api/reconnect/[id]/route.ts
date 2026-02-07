@@ -1,9 +1,15 @@
 import SessionManager from '@/lib/session';
+import { getAuthSession } from '@/lib/auth';
 
 export const POST = async (
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) => {
+  const authSession = await getAuthSession();
+  if (!authSession?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
 

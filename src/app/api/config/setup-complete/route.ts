@@ -1,7 +1,13 @@
 import configManager from '@/lib/config';
 import { NextRequest } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
 
 export const POST = async (req: NextRequest) => {
+  const session = await requireAdmin();
+  if (!session) {
+    return Response.json({ message: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     configManager.markSetupComplete();
 

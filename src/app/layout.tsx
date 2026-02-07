@@ -10,6 +10,7 @@ import ThemeProvider from '@/components/theme/Provider';
 import configManager from '@/lib/config';
 import SetupWizard from '@/components/Setup/SetupWizard';
 import { ChatProvider } from '@/lib/hooks/useChat';
+import { getAuthSession } from '@/lib/auth';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -24,21 +25,26 @@ export const metadata: Metadata = {
     'Perplexica is an AI powered chatbot that is connected to the internet.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const setupComplete = configManager.isSetupComplete();
   const configSections = configManager.getUIConfigSections();
+  const session = await getAuthSession();
 
   return (
     <html className="h-full" lang="en" suppressHydrationWarning>
       <body className={cn('h-full antialiased', montserrat.className)}>
         <ThemeProvider>
-          {setupComplete ? (
+          {!setupComplete ? (
+            <SetupWizard configSections={configSections} />
+          ) : !session ? (
+            <>{children}</>
+          ) : (
             <ChatProvider>
-              <Sidebar>{children}</Sidebar>
+              <Sidebar isAdmin={(session?.user as any)?.role === 'admin'}>{children}</Sidebar>
               <Toaster
                 toastOptions={{
                   unstyled: true,
@@ -49,8 +55,6 @@ export default function RootLayout({
                 }}
               />
             </ChatProvider>
-          ) : (
-            <SetupWizard configSections={configSections} />
           )}
         </ThemeProvider>
       </body>

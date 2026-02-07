@@ -1,6 +1,7 @@
 import handleVideoSearch from '@/lib/agents/media/video';
 import ModelRegistry from '@/lib/models/registry';
 import { ModelWithProvider } from '@/lib/models/types';
+import { getAuthSession } from '@/lib/auth';
 
 interface VideoSearchBody {
   query: string;
@@ -9,6 +10,11 @@ interface VideoSearchBody {
 }
 
 export const POST = async (req: Request) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body: VideoSearchBody = await req.json();
 

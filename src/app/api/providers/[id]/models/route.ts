@@ -1,11 +1,17 @@
 import ModelRegistry from '@/lib/models/registry';
 import { Model } from '@/lib/models/types';
 import { NextRequest } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
 
 export const POST = async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) => {
+  const session = await requireAdmin();
+  if (!session) {
+    return Response.json({ message: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const { id } = await params;
 
@@ -52,6 +58,11 @@ export const DELETE = async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) => {
+  const session = await requireAdmin();
+  if (!session) {
+    return Response.json({ message: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const { id } = await params;
 

@@ -1,11 +1,17 @@
 import db from '@/lib/db';
 import { chats, messages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getAuthSession } from '@/lib/auth';
 
 export const GET = async (
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
 
@@ -14,6 +20,10 @@ export const GET = async (
     });
 
     if (!chatExists) {
+      return Response.json({ message: 'Chat not found' }, { status: 404 });
+    }
+
+    if (chatExists.userId !== (session.user as any).id) {
       return Response.json({ message: 'Chat not found' }, { status: 404 });
     }
 
@@ -41,6 +51,11 @@ export const DELETE = async (
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
 
@@ -49,6 +64,10 @@ export const DELETE = async (
     });
 
     if (!chatExists) {
+      return Response.json({ message: 'Chat not found' }, { status: 404 });
+    }
+
+    if (chatExists.userId !== (session.user as any).id) {
       return Response.json({ message: 'Chat not found' }, { status: 404 });
     }
 

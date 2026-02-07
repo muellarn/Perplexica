@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import ModelRegistry from '@/lib/models/registry';
 import UploadManager from '@/lib/uploads/manager';
+import { getAuthSession } from '@/lib/auth';
 
 export async function POST(req: Request) {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
 

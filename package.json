@@ -21,6 +21,7 @@
     "@tailwindcss/typography": "^0.5.12",
     "@toolsycc/json-repair": "^0.1.22",
     "axios": "^1.8.3",
+    "bcryptjs": "^3.0.2",
     "better-sqlite3": "^11.9.1",
     "clsx": "^2.1.0",
     "drizzle-orm": "^0.40.1",
@@ -33,6 +34,7 @@
     "mathjs": "^15.1.0",
     "motion": "^12.23.26",
     "next": "^16.0.7",
+    "next-auth": "^4.24.11",
     "next-themes": "^0.3.0",
     "officeparser": "^5.2.2",
     "ollama": "^0.6.3",
@@ -53,6 +55,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.12",
     "@types/jspdf": "^2.0.0",
     "@types/node": "^24.8.1",

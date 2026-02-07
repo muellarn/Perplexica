@@ -1,6 +1,7 @@
 import generateSuggestions from '@/lib/agents/suggestions';
 import ModelRegistry from '@/lib/models/registry';
 import { ModelWithProvider } from '@/lib/models/types';
+import { getAuthSession } from '@/lib/auth';
 
 interface SuggestionsGenerationBody {
   chatHistory: any[];
@@ -8,6 +9,11 @@ interface SuggestionsGenerationBody {
 }
 
 export const POST = async (req: Request) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body: SuggestionsGenerationBody = await req.json();
 

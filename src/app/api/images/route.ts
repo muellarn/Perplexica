@@ -1,6 +1,7 @@
 import searchImages from '@/lib/agents/media/image';
 import ModelRegistry from '@/lib/models/registry';
 import { ModelWithProvider } from '@/lib/models/types';
+import { getAuthSession } from '@/lib/auth';
 
 interface ImageSearchBody {
   query: string;
@@ -9,6 +10,11 @@ interface ImageSearchBody {
 }
 
 export const POST = async (req: Request) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body: ImageSearchBody = await req.json();
 

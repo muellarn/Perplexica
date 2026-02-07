@@ -1,4 +1,5 @@
 import { searchSearxng } from '@/lib/searxng';
+import { getAuthSession } from '@/lib/auth';
 
 const websitesForTopic = {
   tech: {
@@ -26,6 +27,11 @@ const websitesForTopic = {
 type Topic = keyof typeof websitesForTopic;
 
 export const GET = async (req: Request) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const params = new URL(req.url).searchParams;
 

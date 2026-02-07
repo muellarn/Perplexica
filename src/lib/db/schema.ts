@@ -35,4 +35,13 @@ export const chats = sqliteTable('chats', {
   files: text('files', { mode: 'json' })
     .$type<DBFile[]>()
     .default(sql`'[]'`),
+  userId: text('userId').notNull().default(''),
+});
+
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  passwordHash: text('passwordHash').notNull(),
+  role: text('role', { enum: ['admin', 'user'] }).notNull().default('user'),
+  createdAt: text('createdAt').notNull(),
 });

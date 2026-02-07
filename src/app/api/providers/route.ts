@@ -1,7 +1,13 @@
 import ModelRegistry from '@/lib/models/registry';
 import { NextRequest } from 'next/server';
+import { getAuthSession, requireAdmin } from '@/lib/auth';
 
 export const GET = async (req: Request) => {
+  const session = await getAuthSession();
+  if (!session?.user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const registry = new ModelRegistry();
 
@@ -33,6 +39,11 @@ export const GET = async (req: Request) => {
 };
 
 export const POST = async (req: NextRequest) => {
+  const session = await requireAdmin();
+  if (!session) {
+    return Response.json({ message: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const body = await req.json();
     const { type, name, config } = body;

@@ -268,12 +268,12 @@ export const chatContext = createContext<ChatContext>({
 });
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const params: { chatId: string } = useParams();
+  const params = useParams() as { chatId: string } | null;
 
   const searchParams = useSearchParams();
-  const initialMessage = searchParams.get('q');
+  const initialMessage = searchParams?.get('q') ?? null;
 
-  const [chatId, setChatId] = useState<string | undefined>(params.chatId);
+  const [chatId, setChatId] = useState<string | undefined>(params?.chatId);
   const [newChatCreated, setNewChatCreated] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -471,7 +471,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (params.chatId && params.chatId !== chatId) {
+    if (params?.chatId && params.chatId !== chatId) {
       setChatId(params.chatId);
       setMessages([]);
       chatHistory.current = [];
@@ -481,7 +481,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setNotFound(false);
       setNewChatCreated(false);
     }
-  }, [params.chatId, chatId]);
+  }, [params?.chatId, chatId]);
 
   useEffect(() => {
     if (
