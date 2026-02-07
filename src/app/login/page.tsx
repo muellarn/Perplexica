@@ -12,13 +12,14 @@ const LoginForm = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
+    const formData = new FormData(e.currentTarget);
     await signIn('credentials', {
-      username,
-      password,
+      username: (formData.get('username') as string) || username,
+      password: (formData.get('password') as string) || password,
       redirect: true,
       callbackUrl: '/',
     });
@@ -53,6 +54,7 @@ const LoginForm = () => {
           </label>
           <input
             id="username"
+            name="username"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -72,6 +74,7 @@ const LoginForm = () => {
           </label>
           <input
             id="password"
+            name="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
