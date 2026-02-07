@@ -81,6 +81,12 @@ const SettingsDialogue = ({
             },
           });
 
+          if (res.status === 403) {
+            setIsOpen(false);
+            toast.error('Settings are only available for admins.');
+            return;
+          }
+
           const data = await res.json();
 
           setConfig(data);
