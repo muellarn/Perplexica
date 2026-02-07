@@ -4,13 +4,14 @@ import {
   BrainCog,
   ChevronLeft,
   ExternalLink,
+  KeyRound,
   Search,
   Sliders,
   ToggleRight,
 } from 'lucide-react';
 import Preferences from './Sections/Preferences';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import Loader from '../ui/Loader';
 import { cn } from '@/lib/utils';
@@ -18,8 +19,19 @@ import Models from './Sections/Models/Section';
 import SearchSection from './Sections/Search';
 import Select from '@/components/ui/Select';
 import Personalization from './Sections/Personalization';
+import AccountSection from './Sections/Account';
 
-const sections = [
+interface Section {
+  key: string;
+  name: string;
+  description: string;
+  icon: any;
+  component: any;
+  dataAdd: string;
+  adminOnly?: boolean;
+}
+
+const allSections: Section[] = [
   {
     key: 'preferences',
     name: 'Preferences',
@@ -43,6 +55,7 @@ const sections = [
     icon: BrainCog,
     component: Models,
     dataAdd: 'modelProviders',
+    adminOnly: true,
   },
   {
     key: 'search',
@@ -51,6 +64,15 @@ const sections = [
     icon: Search,
     component: SearchSection,
     dataAdd: 'search',
+    adminOnly: true,
+  },
+  {
+    key: 'account',
+    name: 'Account',
+    description: 'Change your password.',
+    icon: KeyRound,
+    component: AccountSection,
+    dataAdd: 'account',
   },
 ];
 
@@ -63,15 +85,24 @@ const SettingsDialogue = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [config, setConfig] = useState<any>(null);
-  const [activeSection, setActiveSection] = useState<string>(sections[0].key);
-  const [selectedSection, setSelectedSection] = useState(sections[0]);
+  const [role, setRole] = useState<string>('user');
+  const [activeSection, setActiveSection] = useState<string>('preferences');
 
-  useEffect(() => {
-    setSelectedSection(sections.find((s) => s.key === activeSection)!);
-  }, [activeSection]);
+  const sections = useMemo(
+    () => allSections.filter((s) => !s.adminOnly || role === 'admin'),
+    [role],
+  );
+
+  const selectedSection = useMemo(
+    () => sections.find((s) => s.key === activeSection) || sections[0],
+    [activeSection, sections],
+  );
 
   useEffect(() => {
     if (isOpen) {
+      setIsLoading(true);
+      setActiveSection('preferences');
+
       const fetchConfig = async () => {
         try {
           const res = await fetch('/api/config', {
@@ -81,15 +112,15 @@ const SettingsDialogue = ({
             },
           });
 
-          if (res.status === 403) {
+          if (!res.ok) {
             setIsOpen(false);
-            toast.error('Settings are only available for admins.');
+            toast.error('Failed to load settings.');
             return;
           }
 
           const data = await res.json();
-
           setConfig(data);
+          setRole(data.role || 'user');
         } catch (error) {
           console.error('Error fetching config:', error);
           toast.error('Failed to load configuration.');
@@ -101,6 +132,23 @@ const SettingsDialogue = ({
       fetchConfig();
     }
   }, [isOpen]);
+
+  const renderSection = () => {
+    if (!selectedSection) return null;
+
+    if (selectedSection.key === 'account') {
+      return <AccountSection />;
+    }
+
+    if (!config?.fields?.[selectedSection.dataAdd]) return null;
+
+    return (
+      <selectedSection.component
+        fields={config.fields[selectedSection.dataAdd]}
+        values={config.values[selectedSection.dataAdd]}
+      />
+    );
+  };
 
   return (
     <Dialog
@@ -140,7 +188,7 @@ const SettingsDialogue = ({
                   <div className="flex flex-col items-start space-y-1 mt-8">
                     {sections.map((section) => (
                       <button
-                        key={section.dataAdd}
+                        key={section.key}
                         className={cn(
                           `flex flex-row items-center space-x-2 px-2 py-1.5 rounded-lg w-full text-sm hover:bg-light-200 hover:dark:bg-dark-200 transition duration-200 active:scale-95`,
                           activeSection === section.key
@@ -196,7 +244,7 @@ const SettingsDialogue = ({
                     className="!text-xs lg:!text-sm"
                   />
                 </div>
-                {selectedSection.component && (
+                {selectedSection && (
                   <div className="flex flex-1 flex-col overflow-hidden">
                     <div className="border-b border-light-200/60 px-6 pb-6 lg:pt-6 dark:border-dark-200/60 flex-shrink-0">
                       <div className="flex flex-col">
@@ -209,10 +257,7 @@ const SettingsDialogue = ({
                       </div>
                     </div>
                     <div className="flex-1 overflow-y-auto">
-                      <selectedSection.component
-                        fields={config.fields[selectedSection.dataAdd]}
-                        values={config.values[selectedSection.dataAdd]}
-                      />
+                      {renderSection()}
                     </div>
                   </div>
                 )}
