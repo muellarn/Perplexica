@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y python3 python3-pip sqlite3 && rm -rf /
 WORKDIR /home/perplexica
 
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout 600000
+RUN yarn install --network-timeout 600000
 
 COPY tsconfig.json next.config.mjs next-env.d.ts postcss.config.js drizzle.config.ts tailwind.config.ts ./
 COPY src ./src
@@ -54,7 +54,7 @@ RUN git clone "https://github.com/searxng/searxng" \
                    "/usr/local/searxng/searxng-src"
 
 RUN python3 -m venv "/usr/local/searxng/searx-pyenv"
-RUN "/usr/local/searxng/searx-pyenv/bin/pip" install --upgrade pip setuptools wheel pyyaml msgspec
+RUN "/usr/local/searxng/searx-pyenv/bin/pip" install --upgrade pip setuptools wheel pyyaml msgspec typing_extensions
 RUN cd "/usr/local/searxng/searxng-src" && \
     "/usr/local/searxng/searx-pyenv/bin/pip" install --use-pep517 --no-build-isolation -e .
 
