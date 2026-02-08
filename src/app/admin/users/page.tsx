@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Trash2, Plus, Shield } from 'lucide-react';
+import { Users, Trash2, Plus, Shield, KeyRound } from 'lucide-react';
 
 interface User {
   id: string;
@@ -23,6 +23,8 @@ const AdminUsersPage = () => {
     message: string;
   } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [resetPasswordId, setResetPasswordId] = useState<string | null>(null);
+  const [resetPassword, setResetPassword] = useState('');
 
   const fetchUsers = async () => {
     try {
@@ -107,6 +109,39 @@ const AdminUsersPage = () => {
       setFeedback({ type: 'error', message: 'Failed to delete user' });
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleResetPassword = async (user: User) => {
+    if (!resetPassword || resetPassword.length < 8) {
+      setFeedback({ type: 'error', message: 'Password must be at least 8 characters' });
+      return;
+    }
+
+    setFeedback(null);
+
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: resetPassword }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFeedback({ type: 'error', message: data.message });
+        return;
+      }
+
+      setResetPasswordId(null);
+      setResetPassword('');
+      setFeedback({
+        type: 'success',
+        message: `Password reset for "${user.username}"`,
+      });
+    } catch {
+      setFeedback({ type: 'error', message: 'Failed to reset password' });
     }
   };
 
@@ -290,24 +325,64 @@ const AdminUsersPage = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleDelete(user)}
-                  disabled={user.role === 'admin' || deletingId === user.id}
-                  className={`shrink-0 p-2 rounded-lg transition duration-200 ${
-                    user.role === 'admin'
-                      ? 'opacity-20 cursor-not-allowed text-black/50 dark:text-white/50'
-                      : deletingId === user.id
-                        ? 'opacity-50 cursor-not-allowed text-red-400'
-                        : 'text-black/40 dark:text-white/40 hover:text-red-500 hover:bg-red-500/10 active:scale-95'
-                  }`}
-                  title={
-                    user.role === 'admin'
-                      ? 'Cannot delete admin'
-                      : `Delete ${user.username}`
-                  }
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {resetPasswordId === user.id ? (
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); handleResetPassword(user); }}
+                      className="flex items-center gap-2"
+                    >
+                      <input
+                        type="password"
+                        value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)}
+                        className="rounded-lg bg-light-200 dark:bg-dark-200 px-3 py-1.5 text-xs text-black/70 dark:text-white/70 outline-none placeholder:text-black/30 dark:placeholder:text-white/30 w-36"
+                        placeholder="New password (min 8)"
+                        minLength={8}
+                        autoFocus
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="submit"
+                        className="p-1.5 rounded-lg text-green-500 hover:bg-green-500/10 active:scale-95 transition duration-200 text-xs font-medium"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setResetPasswordId(null); setResetPassword(''); }}
+                        className="p-1.5 rounded-lg text-black/40 dark:text-white/40 hover:bg-light-200 hover:dark:bg-dark-200 active:scale-95 transition duration-200 text-xs"
+                      >
+                        Cancel
+                      </button>
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => { setResetPasswordId(user.id); setResetPassword(''); }}
+                      className="p-2 rounded-lg text-black/40 dark:text-white/40 hover:text-blue-500 hover:bg-blue-500/10 active:scale-95 transition duration-200"
+                      title={`Reset password for ${user.username}`}
+                    >
+                      <KeyRound size={16} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(user)}
+                    disabled={user.role === 'admin' || deletingId === user.id}
+                    className={`shrink-0 p-2 rounded-lg transition duration-200 ${
+                      user.role === 'admin'
+                        ? 'opacity-20 cursor-not-allowed text-black/50 dark:text-white/50'
+                        : deletingId === user.id
+                          ? 'opacity-50 cursor-not-allowed text-red-400'
+                          : 'text-black/40 dark:text-white/40 hover:text-red-500 hover:bg-red-500/10 active:scale-95'
+                    }`}
+                    title={
+                      user.role === 'admin'
+                        ? 'Cannot delete admin'
+                        : `Delete ${user.username}`
+                    }
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

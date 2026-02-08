@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from '@headlessui/react';
 import SettingsButton from './Settings/SettingsButton';
+import SettingsButtonMobile from './Settings/SettingsButtonMobile';
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return <div className="flex flex-col items-center w-full">{children}</div>;
@@ -119,7 +120,7 @@ const Sidebar = ({ children, isAdmin = false }: { children: React.ReactNode; isA
                 <Users size={19} />
               </Link>
             )}
-            {isAdmin && <SettingsButton />}
+            <SettingsButton />
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="p-2.5 rounded-full text-black/50 dark:text-white/50 hover:bg-light-200 hover:dark:bg-dark-200 hover:opacity-70 hover:scale-105 transition duration-200"
@@ -150,6 +151,7 @@ const Sidebar = ({ children, isAdmin = false }: { children: React.ReactNode; isA
             <p className="text-xs">{link.label}</p>
           </Link>
         ))}
+        <SettingsButtonMobile />
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
           className="relative flex flex-col items-center space-y-1 text-center w-full text-black dark:text-white/70"
